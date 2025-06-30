@@ -9,6 +9,7 @@ class PACountdownTimer {
         this.soundEnabled = true;
         this.marketModeOnly = true;
         this.preNotificationSeconds = 10;
+        this.isDarkMode = false;
 
         // Timers
         this.mainTimer = null;
@@ -31,10 +32,55 @@ class PACountdownTimer {
     init() {
         this.setupEventListeners();
         this.loadSettings();
+        this.initTheme();
         this.initAudio();
         this.startClockTimer();
         this.startMarketCheckTimer();
         this.checkMarketHours();
+    }
+
+    initTheme() {
+        // 检查本地存储的主题设置
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || savedTheme === 'light') {
+            this.isDarkMode = savedTheme === 'dark';
+            this.applyTheme();
+        } else {
+            // 跟随系统
+            this.isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            this.applyTheme();
+        }
+        // 监听系统主题变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                this.isDarkMode = e.matches;
+                this.applyTheme();
+            }
+        });
+    }
+
+    applyTheme() {
+        const html = document.documentElement;
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+
+        if (this.isDarkMode) {
+            html.classList.remove('light');
+            html.classList.add('dark');
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+        } else {
+            html.classList.remove('dark');
+            html.classList.add('light');
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        }
+    }
+
+    toggleTheme() {
+        this.isDarkMode = !this.isDarkMode;
+        this.applyTheme();
+        localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
     }
 
     initAudio() {
@@ -64,6 +110,7 @@ class PACountdownTimer {
         document.getElementById('market-toggle').addEventListener('click', () => this.toggleMarketMode());
         document.getElementById('reset-timer').addEventListener('click', () => this.resetTimer());
         document.getElementById('notification-slider').addEventListener('input', (e) => this.updateNotificationTime(e.target.value));
+        document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
 
         // Handle page visibility changes
         document.addEventListener('visibilitychange', () => {
@@ -281,12 +328,10 @@ class PACountdownTimer {
         // Update sound button
         const soundBtn = document.getElementById('sound-toggle');
         soundBtn.textContent = this.soundEnabled ? '🔊 声音开启' : '🔇 声音关闭';
-        soundBtn.classList.toggle('active', this.soundEnabled);
 
         // Update market mode button
         const marketBtn = document.getElementById('market-toggle');
         marketBtn.textContent = this.marketModeOnly ? '📈 仅交易时间' : '🌍 全天运行';
-        marketBtn.classList.toggle('active', this.marketModeOnly);
 
         // Update notification time display
         document.getElementById('notification-time').textContent = this.preNotificationSeconds;
