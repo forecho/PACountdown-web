@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PACountdown - 网页版</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>PACountdown</h1>
+        <p class="subtitle">精准的5分钟间隔倒计时器</p>
+        
+        <div class="status-grid">
+            <div class="status-item">
+                <div class="status-label">市场状态</div>
+                <div class="status-value" id="market-status">检查中...</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">当前时间</div>
+                <div class="status-value" id="current-time">--:--:--</div>
+            </div>
+        </div>
+        
+        <div class="countdown" id="countdown">5:00</div>
+        
+        <div class="controls">
+            <button class="btn" id="sound-toggle">🔊 声音开启</button>
+            <button class="btn" id="test-sound">🎵 测试声音</button>
+            <button class="btn" id="market-toggle">📈 仅交易时间</button>
+            <button class="btn" id="reset-timer">🔄 重置</button>
+        </div>
+        
+        <div class="notification-setting">
+            <div class="status-label">提前通知时间: <span id="notification-time">10</span> 秒</div>
+            <div class="slider-container">
+                <input type="range" min="5" max="30" value="10" class="slider" id="notification-slider">
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
