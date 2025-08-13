@@ -75,7 +75,6 @@ class PACountdownTimer {
 
     init() {
         this.detectLanguage();
-        this.setupEventListeners();
         this.loadSettings();
         this.initTheme();
         this.initAudio();
@@ -83,6 +82,15 @@ class PACountdownTimer {
         this.startMarketCheckTimer();
         this.checkMarketHours();
         this.updateLanguageUI();
+
+        // 确保 DOM 完全加载后再设置事件监听器
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.setupEventListeners();
+            });
+        } else {
+            this.setupEventListeners();
+        }
     }
 
     detectLanguage() {
@@ -165,9 +173,59 @@ class PACountdownTimer {
     }
 
     toggleLanguage() {
+        console.log('语言切换按钮被点击');
+        console.log('当前语言:', this.currentLanguage);
+
+        // 切换语言
         this.currentLanguage = this.currentLanguage === 'zh' ? 'en' : 'zh';
+        console.log('切换后语言:', this.currentLanguage);
+
+        // 保存到本地存储
         localStorage.setItem('language', this.currentLanguage);
+
+        // 更新界面
         this.updateLanguageUI();
+
+        // 强制更新所有文本
+        this.forceUpdateAllText();
+
+        console.log('语言切换完成');
+    }
+
+    forceUpdateAllText() {
+        // 强制更新所有需要翻译的文本
+        const elements = {
+            'h1': this.getText('title'),
+            'p': this.getText('subtitle'),
+            '.text-blue-600, .text-blue-200': this.getText('marketStatus'),
+            '.text-green-600, .text-green-200': this.getText('currentTime')
+        };
+
+        // 更新各个元素
+        Object.entries(elements).forEach(([selector, text]) => {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.textContent = text;
+            }
+        });
+
+        // 更新按钮文本
+        this.updateUI();
+
+        // 更新通知设置
+        const notificationContainer = document.querySelector('.text-purple-600, .text-purple-200');
+        if (notificationContainer) {
+            notificationContainer.innerHTML = this.getText('notificationTime') + ': <span class="font-medium" id="notification-time">' + this.preNotificationSeconds + '</span> ' + this.getText('seconds');
+        }
+
+        // 更新语言切换按钮
+        const languageToggle = document.getElementById('language-toggle');
+        if (languageToggle) {
+            const span = languageToggle.querySelector('span');
+            if (span) {
+                span.textContent = this.currentLanguage === 'zh' ? '中/En' : 'En/中';
+            }
+        }
     }
 
     initTheme() {
@@ -290,13 +348,58 @@ class PACountdownTimer {
     }
 
     setupEventListeners() {
-        document.getElementById('sound-toggle').addEventListener('click', () => this.toggleSound());
-        document.getElementById('test-sound').addEventListener('click', () => this.testSound());
-        document.getElementById('market-toggle').addEventListener('click', () => this.toggleMarketMode());
-        document.getElementById('reset-timer').addEventListener('click', () => this.resetTimer());
-        document.getElementById('notification-slider').addEventListener('input', (e) => this.updateNotificationTime(e.target.value));
-        document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
-        document.getElementById('language-toggle').addEventListener('click', () => this.toggleLanguage());
+        console.log('设置事件监听器...');
+
+        // 使用更直接的方式设置事件监听器
+        const soundToggle = document.getElementById('sound-toggle');
+        const testSound = document.getElementById('test-sound');
+        const marketToggle = document.getElementById('market-toggle');
+        const resetTimer = document.getElementById('reset-timer');
+        const notificationSlider = document.getElementById('notification-slider');
+        const themeToggle = document.getElementById('theme-toggle');
+        const languageToggle = document.getElementById('language-toggle');
+
+        if (soundToggle) {
+            soundToggle.addEventListener('click', () => this.toggleSound());
+            console.log('声音切换按钮事件监听器已设置');
+        }
+
+        if (testSound) {
+            testSound.addEventListener('click', () => this.testSound());
+            console.log('测试声音按钮事件监听器已设置');
+        }
+
+        if (marketToggle) {
+            marketToggle.addEventListener('click', () => this.toggleMarketMode());
+            console.log('市场模式按钮事件监听器已设置');
+        }
+
+        if (resetTimer) {
+            resetTimer.addEventListener('click', () => this.resetTimer());
+            console.log('重置按钮事件监听器已设置');
+        }
+
+        if (notificationSlider) {
+            notificationSlider.addEventListener('input', (e) => this.updateNotificationTime(e.target.value));
+            console.log('通知滑块事件监听器已设置');
+        }
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => this.toggleTheme());
+            console.log('主题切换按钮事件监听器已设置');
+        }
+
+        // 语言切换按钮事件监听器
+        if (languageToggle) {
+            console.log('找到语言切换按钮，添加事件监听器');
+            languageToggle.addEventListener('click', () => {
+                console.log('语言切换按钮被点击');
+                this.toggleLanguage();
+            });
+            console.log('语言切换按钮事件监听器已设置');
+        } else {
+            console.error('未找到语言切换按钮');
+        }
 
         // Handle page visibility changes
         document.addEventListener('visibilitychange', () => {
@@ -304,6 +407,8 @@ class PACountdownTimer {
                 this.resetTimer();
             }
         });
+
+        console.log('事件监听器设置完成');
     }
 
     loadSettings() {
@@ -554,5 +659,7 @@ class PACountdownTimer {
 
 // Initialize the timer when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new PACountdownTimer();
+    console.log('DOM 加载完成，开始初始化 PACountdownTimer');
+    window.paTimer = new PACountdownTimer();
+    console.log('PACountdownTimer 实例已创建并保存到 window.paTimer');
 }); 
