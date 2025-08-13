@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多语言功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .language-info {
+            background: #f0f8ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>多语言功能测试</h1>
+    
+    <div class="test-section">
+        <h2>浏览器语言检测测试</h2>
+        <div class="language-info">
+            <p><strong>浏览器语言:</strong> <span id="browser-lang"></span></p>
+            <p><strong>用户语言:</strong> <span id="user-lang"></span></p>
+            <p><strong>检测到的语言:</strong> <span id="detected-lang"></span></p>
+        </div>
+        <button onclick="testLanguageDetection()">测试语言检测</button>
+    </div>
+
+    <div class="test-section">
+        <h2>本地存储测试</h2>
+        <div class="language-info">
+            <p><strong>保存的语言设置:</strong> <span id="saved-lang"></span></p>
+        </div>
+        <button onclick="setLanguage('zh')">设置为中文</button>
+        <button onclick="setLanguage('en')">设置为英文</button>
+        <button onclick="clearLanguage()">清除语言设置</button>
+    </div>
+
+    <div class="test-section">
+        <h2>翻译测试</h2>
+        <div class="language-info">
+            <p><strong>当前语言:</strong> <span id="current-lang"></span></p>
+            <p><strong>标题翻译:</strong> <span id="title-translation"></span></p>
+            <p><strong>副标题翻译:</strong> <span id="subtitle-translation"></span></p>
+        </div>
+        <button onclick="testTranslations()">测试翻译</button>
+    </div>
+
+    <script>
+        // 模拟翻译对象
+        const translations = {
+            zh: {
+                title: 'PACountdown',
+                subtitle: '精准的5分钟间隔倒计时器',
+                marketStatus: '市场状态',
+                currentTime: '当前时间'
+            },
+            en: {
+                title: 'PACountdown',
+                subtitle: 'Precise 5-Minute Interval Timer',
+                marketStatus: 'Market Status',
+                currentTime: 'Current Time'
+            }
+        };
+
+        function testLanguageDetection() {
+            const browserLang = navigator.language || navigator.userLanguage;
+            const userLang = localStorage.getItem('language');
+            let detectedLang = 'en'; // 默认英文
+            
+            if (userLang && translations[userLang]) {
+                detectedLang = userLang;
+            } else if (browserLang.startsWith('zh')) {
+                detectedLang = 'zh';
+            }
+            
+            document.getElementById('browser-lang').textContent = browserLang;
+            document.getElementById('user-lang').textContent = userLang || '未设置';
+            document.getElementById('detected-lang').textContent = detectedLang;
+        }
+
+        function setLanguage(lang) {
+            localStorage.setItem('language', lang);
+            document.getElementById('saved-lang').textContent = lang;
+        }
+
+        function clearLanguage() {
+            localStorage.removeItem('language');
+            document.getElementById('saved-lang').textContent = '已清除';
+        }
+
+        function testTranslations() {
+            const currentLang = localStorage.getItem('language') || 'en';
+            document.getElementById('current-lang').textContent = currentLang;
+            document.getElementById('title-translation').textContent = translations[currentLang].title;
+            document.getElementById('subtitle-translation').textContent = translations[currentLang].subtitle;
+        }
+
+        // 页面加载时运行测试
+        window.onload = function() {
+            testLanguageDetection();
+            testTranslations();
+            document.getElementById('saved-lang').textContent = localStorage.getItem('language') || '未设置';
+        };
+    </script>
+</body>
+</html>
