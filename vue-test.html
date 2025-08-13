@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vue.js 语言切换测试</title>
+    <title>Vue.js 功能测试</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         body {
@@ -19,7 +19,7 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .language-btn {
+        .test-btn {
             padding: 10px 20px;
             margin: 10px;
             border: none;
@@ -29,7 +29,7 @@
             color: white;
             font-size: 16px;
         }
-        .language-btn:hover {
+        .test-btn:hover {
             background: #0056b3;
         }
         .status {
@@ -48,27 +48,39 @@
             max-height: 200px;
             overflow-y: auto;
         }
+        .theme-dark {
+            background: #333;
+            color: white;
+        }
+        .theme-dark .container {
+            background: #444;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div id="app">
-        <div class="container">
+        <div class="container" :class="{ 'theme-dark': isDarkMode }">
             <h1>{{ t('title') }}</h1>
             
             <div class="status">
-                <h3>Vue.js 语言切换测试</h3>
+                <h3>Vue.js 功能测试</h3>
                 <p><strong>当前语言:</strong> {{ language === 'zh' ? '中文' : 'English' }}</p>
-                <p><strong>浏览器语言:</strong> {{ browserLanguage }}</p>
-                <p><strong>保存的语言:</strong> {{ savedLanguage || '未设置' }}</p>
+                <p><strong>当前主题:</strong> {{ isDarkMode ? '深色' : '浅色' }}</p>
+                <p><strong>保存的主题:</strong> {{ savedTheme || '未设置' }}</p>
+                <p><strong>倒计时时间:</strong> {{ countdownDisplay }}</p>
+                <p><strong>通知时间:</strong> {{ preNotificationSeconds }} 秒</p>
             </div>
             
             <div>
-                <button @click="toggleLanguage" class="language-btn">
+                <button @click="toggleLanguage" class="test-btn">
                     切换语言 ({{ language === 'zh' ? '中/En' : 'En/中' }})
                 </button>
-                <button @click="setLanguage('zh')" class="language-btn">设置为中文</button>
-                <button @click="setLanguage('en')" class="language-btn">设置为英文</button>
-                <button @click="clearLanguage" class="language-btn">清除语言设置</button>
+                <button @click="toggleTheme" class="test-btn">
+                    切换主题 ({{ isDarkMode ? '深色' : '浅色' }})
+                </button>
+                <button @click="testCountdown" class="test-btn">测试倒计时</button>
+                <button @click="clearAllSettings" class="test-btn">清除所有设置</button>
             </div>
             
             <div class="status">
@@ -86,6 +98,8 @@
                 <p>点击次数: {{ clickCount }}</p>
                 <p>最后切换时间: {{ lastToggleTime }}</p>
                 <p>Vue.js 版本: {{ vueVersion }}</p>
+                <p>本地存储主题: {{ localStorage.getItem('theme') || '未设置' }}</p>
+                <p>本地存储语言: {{ localStorage.getItem('language') || '未设置' }}</p>
             </div>
         </div>
     </div>
@@ -97,16 +111,18 @@
             setup() {
                 // 响应式数据
                 const language = ref('zh');
+                const isDarkMode = ref(false);
                 const clickCount = ref(0);
                 const lastToggleTime = ref('未切换');
-                const browserLanguage = ref('');
-                const savedLanguage = ref('');
+                const savedTheme = ref('');
                 const vueVersion = ref(Vue.version);
+                const timeRemaining = ref(300);
+                const preNotificationSeconds = ref(10);
 
                 // 翻译配置
                 const translations = {
                     zh: {
-                        title: 'Vue.js 语言切换测试',
+                        title: 'Vue.js 功能测试',
                         subtitle: '精准的5分钟间隔倒计时器',
                         marketStatus: '市场状态',
                         currentTime: '当前时间',
@@ -114,7 +130,7 @@
                         testSound: '测试声音'
                     },
                     en: {
-                        title: 'Vue.js Language Toggle Test',
+                        title: 'Vue.js Feature Test',
                         subtitle: 'Precise 5-Minute Interval Timer',
                         marketStatus: 'Market Status',
                         currentTime: 'Current Time',
@@ -123,21 +139,45 @@
                     }
                 };
 
-                // 翻译函数
+                // 计算属性
                 const t = (key) => translations[language.value][key] || translations.en[key] || key;
+                
+                const countdownDisplay = computed(() => {
+                    const minutes = Math.floor(timeRemaining.value / 60);
+                    const seconds = timeRemaining.value % 60;
+                    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                });
 
                 // 语言检测
                 const detectLanguage = () => {
                     const saved = localStorage.getItem('language');
-                    savedLanguage.value = saved;
-                    
                     if (saved && translations[saved]) {
                         language.value = saved;
                     } else {
                         const browserLang = navigator.language || navigator.userLanguage;
-                        browserLanguage.value = browserLang;
                         language.value = browserLang.startsWith('zh') ? 'zh' : 'en';
                     }
+                };
+
+                // 主题初始化
+                const initTheme = () => {
+                    const savedThemeValue = localStorage.getItem('theme');
+                    savedTheme.value = savedThemeValue;
+                    
+                    if (savedThemeValue === 'dark' || savedThemeValue === 'light') {
+                        isDarkMode.value = savedThemeValue === 'dark';
+                    } else {
+                        isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    }
+                };
+
+                // 倒计时计算
+                const calculateAndSetInitialTime = () => {
+                    const now = new Date();
+                    const minute = now.getMinutes();
+                    const second = now.getSeconds();
+                    const secondsIntoInterval = (minute % 5) * 60 + second;
+                    timeRemaining.value = Math.max(0, 300 - secondsIntoInterval);
                 };
 
                 // 切换语言
@@ -147,30 +187,45 @@
                     
                     language.value = language.value === 'zh' ? 'en' : 'zh';
                     localStorage.setItem('language', language.value);
-                    savedLanguage.value = language.value;
                     
                     console.log('语言切换为:', language.value);
                 };
 
-                // 设置语言
-                const setLanguage = (lang) => {
-                    language.value = lang;
-                    localStorage.setItem('language', lang);
-                    savedLanguage.value = lang;
-                    clickCount.value++;
-                    lastToggleTime.value = new Date().toLocaleTimeString();
-                };
-
-                // 清除语言设置
-                const clearLanguage = () => {
-                    localStorage.removeItem('language');
-                    savedLanguage.value = '';
+                // 切换主题
+                const toggleTheme = () => {
                     clickCount.value++;
                     lastToggleTime.value = new Date().toLocaleTimeString();
                     
-                    // 重新检测语言
-                    const browserLang = navigator.language || navigator.userLanguage;
-                    language.value = browserLang.startsWith('zh') ? 'zh' : 'en';
+                    isDarkMode.value = !isDarkMode.value;
+                    localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light');
+                    savedTheme.value = localStorage.getItem('theme');
+                    
+                    console.log('主题切换为:', isDarkMode.value ? 'dark' : 'light');
+                };
+
+                // 测试倒计时
+                const testCountdown = () => {
+                    clickCount.value++;
+                    lastToggleTime.value = new Date().toLocaleTimeString();
+                    
+                    calculateAndSetInitialTime();
+                    console.log('倒计时重新计算:', countdownDisplay.value);
+                };
+
+                // 清除所有设置
+                const clearAllSettings = () => {
+                    clickCount.value++;
+                    lastToggleTime.value = new Date().toLocaleTimeString();
+                    
+                    localStorage.removeItem('language');
+                    localStorage.removeItem('theme');
+                    localStorage.removeItem('preNotificationSeconds');
+                    
+                    // 重新初始化
+                    detectLanguage();
+                    initTheme();
+                    
+                    console.log('所有设置已清除');
                 };
 
                 // 监听语言变化
@@ -179,24 +234,35 @@
                     document.title = t('title');
                 });
 
+                // 监听主题变化
+                watch(isDarkMode, (newTheme) => {
+                    console.log('主题已更改为:', newTheme ? 'dark' : 'light');
+                });
+
                 // 组件挂载时初始化
                 onMounted(() => {
                     detectLanguage();
+                    initTheme();
+                    calculateAndSetInitialTime();
                     document.title = t('title');
-                    console.log('Vue.js 语言切换测试页面已加载');
+                    console.log('Vue.js 功能测试页面已加载');
                 });
 
                 return {
                     language,
+                    isDarkMode,
                     clickCount,
                     lastToggleTime,
-                    browserLanguage,
-                    savedLanguage,
+                    savedTheme,
                     vueVersion,
+                    timeRemaining,
+                    preNotificationSeconds,
                     t,
+                    countdownDisplay,
                     toggleLanguage,
-                    setLanguage,
-                    clearLanguage
+                    toggleTheme,
+                    testCountdown,
+                    clearAllSettings
                 };
             }
         }).mount('#app');

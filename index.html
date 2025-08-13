@@ -218,6 +218,11 @@
 
                 const toggleTheme = () => {
                     isDarkMode.value = !isDarkMode.value;
+                    applyTheme();
+                    localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light');
+                };
+
+                const applyTheme = () => {
                     const html = document.documentElement;
                     if (isDarkMode.value) {
                         html.classList.remove('light');
@@ -226,7 +231,6 @@
                         html.classList.remove('dark');
                         html.classList.add('light');
                     }
-                    localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light');
                 };
 
                 const initTheme = () => {
@@ -236,7 +240,7 @@
                     } else {
                         isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
                     }
-                    toggleTheme(); // 应用主题
+                    applyTheme(); // 应用主题，但不切换
                 };
 
                 const initAudio = () => {
@@ -453,6 +457,9 @@
                     const savedNotificationTime = localStorage.getItem('preNotificationSeconds');
                     if (savedNotificationTime !== null) {
                         preNotificationSeconds.value = parseInt(savedNotificationTime);
+                    } else {
+                        // 如果没有保存的设置，使用默认值并保存
+                        localStorage.setItem('preNotificationSeconds', preNotificationSeconds.value.toString());
                     }
                 };
 
@@ -475,6 +482,9 @@
                     startMarketCheckTimer();
                     checkMarketHours();
                     document.title = t('title') + ' - ' + t('subtitle');
+
+                    // 初始化时检查倒计时状态
+                    calculateAndSetInitialTime();
 
                     // 页面可见性变化处理
                     document.addEventListener('visibilitychange', () => {
