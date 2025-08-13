@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue.js 语言切换测试</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .language-btn {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            font-size: 16px;
+        }
+        .language-btn:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        .debug {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <h1>{{ t('title') }}</h1>
+            
+            <div class="status">
+                <h3>Vue.js 语言切换测试</h3>
+                <p><strong>当前语言:</strong> {{ language === 'zh' ? '中文' : 'English' }}</p>
+                <p><strong>浏览器语言:</strong> {{ browserLanguage }}</p>
+                <p><strong>保存的语言:</strong> {{ savedLanguage || '未设置' }}</p>
+            </div>
+            
+            <div>
+                <button @click="toggleLanguage" class="language-btn">
+                    切换语言 ({{ language === 'zh' ? '中/En' : 'En/中' }})
+                </button>
+                <button @click="setLanguage('zh')" class="language-btn">设置为中文</button>
+                <button @click="setLanguage('en')" class="language-btn">设置为英文</button>
+                <button @click="clearLanguage" class="language-btn">清除语言设置</button>
+            </div>
+            
+            <div class="status">
+                <h3>翻译测试</h3>
+                <p><strong>标题:</strong> {{ t('title') }}</p>
+                <p><strong>副标题:</strong> {{ t('subtitle') }}</p>
+                <p><strong>市场状态:</strong> {{ t('marketStatus') }}</p>
+                <p><strong>当前时间:</strong> {{ t('currentTime') }}</p>
+                <p><strong>声音开启:</strong> {{ t('soundOn') }}</p>
+                <p><strong>测试声音:</strong> {{ t('testSound') }}</p>
+            </div>
+            
+            <div class="debug">
+                <h4>调试信息</h4>
+                <p>点击次数: {{ clickCount }}</p>
+                <p>最后切换时间: {{ lastToggleTime }}</p>
+                <p>Vue.js 版本: {{ vueVersion }}</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+
+        createApp({
+            setup() {
+                // 响应式数据
+                const language = ref('zh');
+                const clickCount = ref(0);
+                const lastToggleTime = ref('未切换');
+                const browserLanguage = ref('');
+                const savedLanguage = ref('');
+                const vueVersion = ref(Vue.version);
+
+                // 翻译配置
+                const translations = {
+                    zh: {
+                        title: 'Vue.js 语言切换测试',
+                        subtitle: '精准的5分钟间隔倒计时器',
+                        marketStatus: '市场状态',
+                        currentTime: '当前时间',
+                        soundOn: '声音开启',
+                        testSound: '测试声音'
+                    },
+                    en: {
+                        title: 'Vue.js Language Toggle Test',
+                        subtitle: 'Precise 5-Minute Interval Timer',
+                        marketStatus: 'Market Status',
+                        currentTime: 'Current Time',
+                        soundOn: 'Sound On',
+                        testSound: 'Test Sound'
+                    }
+                };
+
+                // 翻译函数
+                const t = (key) => translations[language.value][key] || translations.en[key] || key;
+
+                // 语言检测
+                const detectLanguage = () => {
+                    const saved = localStorage.getItem('language');
+                    savedLanguage.value = saved;
+                    
+                    if (saved && translations[saved]) {
+                        language.value = saved;
+                    } else {
+                        const browserLang = navigator.language || navigator.userLanguage;
+                        browserLanguage.value = browserLang;
+                        language.value = browserLang.startsWith('zh') ? 'zh' : 'en';
+                    }
+                };
+
+                // 切换语言
+                const toggleLanguage = () => {
+                    clickCount.value++;
+                    lastToggleTime.value = new Date().toLocaleTimeString();
+                    
+                    language.value = language.value === 'zh' ? 'en' : 'zh';
+                    localStorage.setItem('language', language.value);
+                    savedLanguage.value = language.value;
+                    
+                    console.log('语言切换为:', language.value);
+                };
+
+                // 设置语言
+                const setLanguage = (lang) => {
+                    language.value = lang;
+                    localStorage.setItem('language', lang);
+                    savedLanguage.value = lang;
+                    clickCount.value++;
+                    lastToggleTime.value = new Date().toLocaleTimeString();
+                };
+
+                // 清除语言设置
+                const clearLanguage = () => {
+                    localStorage.removeItem('language');
+                    savedLanguage.value = '';
+                    clickCount.value++;
+                    lastToggleTime.value = new Date().toLocaleTimeString();
+                    
+                    // 重新检测语言
+                    const browserLang = navigator.language || navigator.userLanguage;
+                    language.value = browserLang.startsWith('zh') ? 'zh' : 'en';
+                };
+
+                // 监听语言变化
+                watch(language, (newLang) => {
+                    console.log('语言已更改为:', newLang);
+                    document.title = t('title');
+                });
+
+                // 组件挂载时初始化
+                onMounted(() => {
+                    detectLanguage();
+                    document.title = t('title');
+                    console.log('Vue.js 语言切换测试页面已加载');
+                });
+
+                return {
+                    language,
+                    clickCount,
+                    lastToggleTime,
+                    browserLanguage,
+                    savedLanguage,
+                    vueVersion,
+                    t,
+                    toggleLanguage,
+                    setLanguage,
+                    clearLanguage
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

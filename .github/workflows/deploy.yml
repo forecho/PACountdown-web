@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    name: Deploy
+    name: Deploy Vue.js Version
     permissions:
       contents: read
       deployments: write
@@ -21,6 +21,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./ --project-name=pacountdown
-          # Optional: target a specific branch
-          # branch: 'production' 
+          command: pages deploy ./ --project-name=pacountdown 
