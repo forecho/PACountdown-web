@@ -17,14 +17,9 @@ class PACountdownTimer {
         this.marketCheckTimer = null;
 
         // Audio - 使用项目中的音频文件
-        this.tickAudio = new Audio('tick.wav');
-        this.finalTickAudio = new Audio('final_tick.wav');
-
-        // 设置音频属性
-        this.tickAudio.preload = 'auto';
-        this.finalTickAudio.preload = 'auto';
-        this.tickAudio.volume = 0.7;
-        this.finalTickAudio.volume = 0.8;
+        this.tickAudio = null;
+        this.finalTickAudio = null;
+        this.audioInitialized = false;
 
         this.init();
     }
@@ -84,24 +79,78 @@ class PACountdownTimer {
     }
 
     initAudio() {
-        // 添加用户交互后初始化音频的逻辑
+        // 创建音频对象
+        this.tickAudio = new Audio('tick.wav');
+        this.finalTickAudio = new Audio('final_tick.wav');
+
+        // 设置音频属性
+        this.tickAudio.preload = 'auto';
+        this.finalTickAudio.preload = 'auto';
+        this.tickAudio.volume = 0.7;
+        this.finalTickAudio.volume = 0.8;
+
+        // 添加音频加载事件监听
+        this.tickAudio.addEventListener('canplaythrough', () => {
+            console.log('Tick音频加载完成');
+        });
+        this.finalTickAudio.addEventListener('canplaythrough', () => {
+            console.log('Final tick音频加载完成');
+        });
+
+        // 添加错误处理
+        this.tickAudio.addEventListener('error', (e) => {
+            console.error('Tick音频加载失败:', e);
+        });
+        this.finalTickAudio.addEventListener('error', (e) => {
+            console.error('Final tick音频加载失败:', e);
+        });
+
+        // 用户交互后初始化音频
         const initAudioOnInteraction = () => {
+            if (this.audioInitialized) return;
+
             try {
-                // 尝试加载音频
-                this.tickAudio.load();
-                this.finalTickAudio.load();
-                console.log('音频初始化成功');
+                // 尝试播放静音音频来解锁音频上下文
+                const unlockAudio = () => {
+                    this.tickAudio.muted = true;
+                    this.finalTickAudio.muted = true;
+
+                    Promise.all([
+                        this.tickAudio.play(),
+                        this.finalTickAudio.play()
+                    ]).then(() => {
+                        this.tickAudio.pause();
+                        this.finalTickAudio.pause();
+                        this.tickAudio.muted = false;
+                        this.finalTickAudio.muted = false;
+                        this.audioInitialized = true;
+                        console.log('音频上下文已解锁');
+                        this.updateUI(); // 更新UI显示
+                    }).catch(e => {
+                        console.log('音频解锁失败:', e);
+                        this.audioInitialized = true; // 即使失败也标记为已初始化
+                        this.updateUI(); // 更新UI显示
+                    });
+                };
+
+                unlockAudio();
             } catch (e) {
                 console.log('音频初始化失败:', e);
+                this.audioInitialized = true;
+                this.updateUI(); // 更新UI显示
             }
-            // 移除事件监听器，只需要初始化一次
-            document.removeEventListener('click', initAudioOnInteraction);
-            document.removeEventListener('touchstart', initAudioOnInteraction);
         };
 
-        // 等待用户交互后初始化音频
-        document.addEventListener('click', initAudioOnInteraction, { once: true });
-        document.addEventListener('touchstart', initAudioOnInteraction, { once: true });
+        // 监听多种用户交互事件
+        const events = ['click', 'touchstart', 'keydown', 'mousedown'];
+        events.forEach(event => {
+            document.addEventListener(event, initAudioOnInteraction, { once: true });
+        });
+
+        // 如果页面已经可见且用户可能已经交互过，尝试初始化
+        if (!document.hidden) {
+            setTimeout(initAudioOnInteraction, 1000);
+        }
     }
 
     setupEventListeners() {
@@ -271,11 +320,16 @@ class PACountdownTimer {
     }
 
     playTickSound() {
-        if (this.soundEnabled) {
+        if (this.soundEnabled && this.audioInitialized && this.tickAudio) {
             try {
                 this.tickAudio.currentTime = 0;
                 this.tickAudio.play().catch(e => {
                     console.log('Tick音频播放失败:', e);
+                    // 如果播放失败，尝试重新初始化
+                    if (e.name === 'NotAllowedError') {
+                        this.audioInitialized = false;
+                        this.initAudio();
+                    }
                 });
             } catch (e) {
                 console.log('Tick音频播放错误:', e);
@@ -284,11 +338,16 @@ class PACountdownTimer {
     }
 
     playFinalTickSound() {
-        if (this.soundEnabled) {
+        if (this.soundEnabled && this.audioInitialized && this.finalTickAudio) {
             try {
                 this.finalTickAudio.currentTime = 0;
                 this.finalTickAudio.play().catch(e => {
                     console.log('Final tick音频播放失败:', e);
+                    // 如果播放失败，尝试重新初始化
+                    if (e.name === 'NotAllowedError') {
+                        this.audioInitialized = false;
+                        this.initAudio();
+                    }
                 });
             } catch (e) {
                 console.log('Final tick音频播放错误:', e);
@@ -310,7 +369,18 @@ class PACountdownTimer {
     }
 
     testSound() {
+        if (!this.audioInitialized) {
+            alert('音频尚未初始化，请点击页面任意位置后再试');
+            return;
+        }
+
+        if (!this.soundEnabled) {
+            alert('请先开启声音功能');
+            return;
+        }
+
         this.playTickSound();
+        console.log('测试音频播放');
     }
 
     resetTimer() {
@@ -327,7 +397,11 @@ class PACountdownTimer {
     updateUI() {
         // Update sound button
         const soundBtn = document.getElementById('sound-toggle');
-        soundBtn.textContent = this.soundEnabled ? '🔊 声音开启' : '🔇 声音关闭';
+        if (this.audioInitialized) {
+            soundBtn.textContent = this.soundEnabled ? '🔊 声音开启' : '🔇 声音关闭';
+        } else {
+            soundBtn.textContent = '⏳ 音频加载中...';
+        }
 
         // Update market mode button
         const marketBtn = document.getElementById('market-toggle');
