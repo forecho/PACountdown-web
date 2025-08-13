@@ -2,17 +2,11 @@
 
 一个精准的5分钟间隔倒计时器，专为交易时间设计。
 
-## 版本说明
+## 技术栈
 
-### 🆕 Vue.js 版本 (当前主要版本)
-- **文件**: `index.html`
-- **技术栈**: Vue 3 + Composition API + Tailwind CSS
-- **优势**: 响应式数据绑定，语言切换更可靠，代码更易维护
-
-### 📄 原生 JavaScript 版本 (备份版本)
-- **文件**: `index-original.html`
-- **技术栈**: 原生 JavaScript + Tailwind CSS
-- **状态**: 功能完整，但语言切换可能存在兼容性问题
+- **Vue 3** (Composition API) - 响应式框架
+- **Tailwind CSS** - 样式框架
+- **Web Audio API** - 音频功能
 
 ## 功能特性
 
@@ -42,17 +36,9 @@
 
 ## 快速开始
 
-### 使用当前版本（Vue.js）
-
 1. 打开 `index.html`
 2. 语言切换功能完全可靠
 3. 所有功能正常工作
-
-### 使用备份版本（原生 JavaScript）
-
-1. 打开 `index-original.html`
-2. 如果语言切换不工作，请查看浏览器控制台
-3. 可能需要刷新页面或清除缓存
 
 ## 部署到 Cloudflare Pages
 
@@ -61,8 +47,7 @@
 项目已配置 GitHub Actions 自动部署到 Cloudflare Pages：
 
 1. 推送到 `main` 分支时自动触发部署
-2. 使用 Vue.js 版本作为主要版本
-3. 项目名称：`pacountdown`
+2. 项目名称：`pacountdown`
 
 ### 音频问题解决方案
 
@@ -107,36 +92,32 @@
 2. 使用本地服务器运行（如 Live Server）
 3. 确保音频文件路径正确
 
-## 技术栈
-
-### 当前版本 (Vue.js)
-- Vue 3 (Composition API)
-- Tailwind CSS
-- Web Audio API
-
-### 备份版本 (原生 JavaScript)
-- HTML5
-- CSS3 (Tailwind CSS)
-- JavaScript (ES6+)
-- Web Audio API
-
 ## 文件结构
 
 ```
 PACountdown-web/
-├── index.html                 # Vue.js 版本（当前主要版本）
-├── index-original.html        # 原生 JavaScript 版本（备份）
-├── script.js                  # 原生 JavaScript 逻辑（备份）
+├── index.html                 # 主应用文件（Vue.js 版本）
 ├── tick.wav                   # 音频文件
 ├── final_tick.wav             # 音频文件
 ├── _headers                   # Cloudflare Pages 配置
 ├── .github/workflows/         # GitHub Actions 配置
 │   └── deploy.yml
 ├── README.md                  # 项目说明
-└── test files/                # 测试文件
-    ├── vue-test.html
-    ├── debug.html
-    ├── simple-test.html
-    ├── fix-test.html
-    └── ...
+├── DEPLOYMENT.md              # 部署说明
+└── vue-test.html              # Vue.js 功能测试页面
 ```
+
+## 开发特点
+
+### Vue.js 优势
+- **响应式数据绑定**：语言切换立即生效，无需手动更新 DOM
+- **更可靠的交互**：使用 Vue 的 `@click` 指令，避免事件监听器绑定问题
+- **更好的代码组织**：使用 Composition API，代码更清晰
+- **完整的语言支持**：智能语言检测，本地存储记忆功能，实时语言切换
+
+### 技术实现
+- **Vue 3 Composition API**：现代化的响应式编程
+- **Tailwind CSS**：美观的响应式设计
+- **Web Audio API**：完整的音频功能
+- **本地存储**：设置自动保存
+- **响应式设计**：适配各种设备
