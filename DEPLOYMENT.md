@@ -2,9 +2,8 @@
 
 ## 当前部署状态
 
-✅ **Vue.js 版本已设为主要版本**
-- `index.html` - Vue.js 版本（当前部署版本）
-- `index-original.html` - 原生 JavaScript 版本（备份）
+✅ **Vue.js 版本部署**
+- `index.html` - Vue.js 版本（当前唯一版本）
 
 ## GitHub Actions 自动部署
 
@@ -15,7 +14,7 @@
 ### 部署流程
 1. 检出代码
 2. 部署到 Cloudflare Pages
-3. 使用 Vue.js 版本作为主要文件
+3. 使用 Vue.js 版本
 
 ### 配置文件
 - `.github/workflows/deploy.yml` - GitHub Actions 配置
@@ -35,23 +34,6 @@ wrangler login
 # 部署项目
 wrangler pages deploy ./ --project-name=pacountdown
 ```
-
-## 版本切换
-
-如果需要切换回原生 JavaScript 版本：
-
-1. 重命名文件：
-   ```bash
-   mv index.html index-vue.html
-   mv index-original.html index.html
-   ```
-
-2. 提交并推送更改：
-   ```bash
-   git add .
-   git commit -m "Switch to original JavaScript version"
-   git push origin main
-   ```
 
 ## 部署检查清单
 
