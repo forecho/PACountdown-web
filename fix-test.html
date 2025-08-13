@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语言切换修复测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .language-btn {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            font-size: 16px;
+        }
+        .language-btn:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        .debug {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>语言切换修复测试</h1>
+        
+        <div class="status">
+            <h3>测试说明</h3>
+            <p>这个页面测试两种语言切换方式：</p>
+            <ol>
+                <li>JavaScript 事件监听器</li>
+                <li>HTML 内联事件处理器</li>
+            </ol>
+        </div>
+        
+        <div>
+            <button class="language-btn" id="js-btn">JavaScript 切换</button>
+            <button class="language-btn" onclick="toggleLanguageInline()">内联切换</button>
+        </div>
+        
+        <div class="status">
+            <p><strong>当前语言:</strong> <span id="current-lang">中文</span></p>
+            <p><strong>标题:</strong> <span id="title-text">语言切换修复测试</span></p>
+            <p><strong>测试文本:</strong> <span id="test-text">这是中文测试文本</span></p>
+        </div>
+        
+        <div class="debug" id="debug-output">
+            调试信息将显示在这里...
+        </div>
+    </div>
+
+    <script>
+        let currentLanguage = 'zh';
+        
+        const translations = {
+            zh: {
+                title: '语言切换修复测试',
+                testText: '这是中文测试文本',
+                currentLang: '中文'
+            },
+            en: {
+                title: 'Language Toggle Fix Test',
+                testText: 'This is English test text',
+                currentLang: 'English'
+            }
+        };
+        
+        function log(message) {
+            const debugOutput = document.getElementById('debug-output');
+            const timestamp = new Date().toLocaleTimeString();
+            debugOutput.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+        
+        function updateUI() {
+            document.getElementById('current-lang').textContent = translations[currentLanguage].currentLang;
+            document.getElementById('title-text').textContent = translations[currentLanguage].title;
+            document.getElementById('test-text').textContent = translations[currentLanguage].testText;
+            document.title = translations[currentLanguage].title;
+        }
+        
+        function toggleLanguage() {
+            log('JavaScript 事件监听器触发');
+            currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
+            log(`语言切换为: ${currentLanguage}`);
+            updateUI();
+        }
+        
+        function toggleLanguageInline() {
+            log('内联事件处理器触发');
+            currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
+            log(`语言切换为: ${currentLanguage}`);
+            updateUI();
+        }
+        
+        // 页面加载完成后设置事件监听器
+        document.addEventListener('DOMContentLoaded', function() {
+            log('DOM 加载完成');
+            
+            const jsBtn = document.getElementById('js-btn');
+            if (jsBtn) {
+                log('找到 JavaScript 按钮，添加事件监听器');
+                jsBtn.addEventListener('click', toggleLanguage);
+                log('JavaScript 事件监听器已添加');
+            } else {
+                log('未找到 JavaScript 按钮');
+            }
+            
+            updateUI();
+            log('初始化完成');
+        });
+    </script>
+</body>
+</html>
