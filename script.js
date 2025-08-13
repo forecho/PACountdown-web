@@ -10,6 +10,7 @@ class PACountdownTimer {
         this.marketModeOnly = true;
         this.preNotificationSeconds = 10;
         this.isDarkMode = false;
+        this.currentLanguage = 'zh'; // 默认中文
 
         // Timers
         this.mainTimer = null;
@@ -21,10 +22,59 @@ class PACountdownTimer {
         this.finalTickAudio = null;
         this.audioInitialized = false;
 
+        // 多语言配置
+        this.translations = {
+            zh: {
+                title: 'PACountdown',
+                subtitle: '精准的5分钟间隔倒计时器',
+                marketStatus: '市场状态',
+                currentTime: '当前时间',
+                marketOpen: '市场开放',
+                marketClosed: '市场关闭',
+                checking: '检查中...',
+                soundOn: '🔊 声音开启',
+                soundOff: '🔇 声音关闭',
+                audioLoading: '⏳ 音频加载中...',
+                testSound: '🎵 测试声音',
+                marketMode: '📈 仅交易时间',
+                allDayMode: '🌍 全天运行',
+                reset: '🔄 重置',
+                notificationTime: '提前通知时间',
+                seconds: '秒',
+                audioNotInitialized: '音频尚未初始化，请点击页面任意位置后再试',
+                enableSoundFirst: '请先开启声音功能',
+                sun: '☀️',
+                moon: '🌙'
+            },
+            en: {
+                title: 'PACountdown',
+                subtitle: 'Precise 5-Minute Interval Timer',
+                marketStatus: 'Market Status',
+                currentTime: 'Current Time',
+                marketOpen: 'Market Open',
+                marketClosed: 'Market Closed',
+                checking: 'Checking...',
+                soundOn: '🔊 Sound On',
+                soundOff: '🔇 Sound Off',
+                audioLoading: '⏳ Audio Loading...',
+                testSound: '🎵 Test Sound',
+                marketMode: '📈 Trading Hours Only',
+                allDayMode: '🌍 All Day',
+                reset: '🔄 Reset',
+                notificationTime: 'Early Notification',
+                seconds: 'seconds',
+                audioNotInitialized: 'Audio not initialized, please click anywhere on the page first',
+                enableSoundFirst: 'Please enable sound first',
+                sun: '☀️',
+                moon: '🌙'
+            }
+        };
+
         this.init();
     }
 
     init() {
+        this.detectLanguage();
         this.setupEventListeners();
         this.loadSettings();
         this.initTheme();
@@ -32,6 +82,92 @@ class PACountdownTimer {
         this.startClockTimer();
         this.startMarketCheckTimer();
         this.checkMarketHours();
+        this.updateLanguageUI();
+    }
+
+    detectLanguage() {
+        // 从本地存储加载保存的语言设置
+        const savedLanguage = localStorage.getItem('language');
+        if (savedLanguage && this.translations[savedLanguage]) {
+            this.currentLanguage = savedLanguage;
+        } else {
+            // 根据浏览器语言自动检测
+            const browserLang = navigator.language || navigator.userLanguage;
+            if (browserLang.startsWith('zh')) {
+                this.currentLanguage = 'zh';
+            } else {
+                this.currentLanguage = 'en';
+            }
+        }
+    }
+
+    getText(key) {
+        return this.translations[this.currentLanguage][key] || this.translations['en'][key] || key;
+    }
+
+    updateLanguageUI() {
+        // 更新页面标题
+        document.title = this.getText('title') + ' - ' + this.getText('subtitle');
+
+        // 更新主标题
+        const titleElement = document.querySelector('h1');
+        if (titleElement) {
+            titleElement.textContent = this.getText('title');
+        }
+
+        // 更新副标题
+        const subtitleElement = document.querySelector('p');
+        if (subtitleElement) {
+            subtitleElement.textContent = this.getText('subtitle');
+        }
+
+        // 更新状态标签
+        const marketStatusLabel = document.querySelector('.text-blue-600, .text-blue-200');
+        if (marketStatusLabel) {
+            marketStatusLabel.textContent = this.getText('marketStatus');
+        }
+
+        const currentTimeLabel = document.querySelector('.text-green-600, .text-green-200');
+        if (currentTimeLabel) {
+            currentTimeLabel.textContent = this.getText('currentTime');
+        }
+
+        // 更新市场状态文本
+        const marketStatusElement = document.getElementById('market-status');
+        if (marketStatusElement && marketStatusElement.textContent !== '--:--:--') {
+            if (this.isMarketOpen()) {
+                marketStatusElement.textContent = this.getText('marketOpen');
+            } else {
+                marketStatusElement.textContent = this.getText('marketClosed');
+            }
+        }
+
+        // 更新按钮文本
+        this.updateUI();
+
+        // 更新通知设置文本
+        const notificationContainer = document.querySelector('.text-purple-600, .text-purple-200');
+        if (notificationContainer) {
+            const notificationTimeElement = document.getElementById('notification-time');
+            if (notificationTimeElement) {
+                notificationContainer.innerHTML = this.getText('notificationTime') + ': <span class="font-medium" id="notification-time">' + this.preNotificationSeconds + '</span> ' + this.getText('seconds');
+            }
+        }
+
+        // 更新语言切换按钮文本
+        const languageToggle = document.getElementById('language-toggle');
+        if (languageToggle) {
+            const span = languageToggle.querySelector('span');
+            if (span) {
+                span.textContent = this.currentLanguage === 'zh' ? '中/En' : 'En/中';
+            }
+        }
+    }
+
+    toggleLanguage() {
+        this.currentLanguage = this.currentLanguage === 'zh' ? 'en' : 'zh';
+        localStorage.setItem('language', this.currentLanguage);
+        this.updateLanguageUI();
     }
 
     initTheme() {
@@ -160,6 +296,7 @@ class PACountdownTimer {
         document.getElementById('reset-timer').addEventListener('click', () => this.resetTimer());
         document.getElementById('notification-slider').addEventListener('input', (e) => this.updateNotificationTime(e.target.value));
         document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
+        document.getElementById('language-toggle').addEventListener('click', () => this.toggleLanguage());
 
         // Handle page visibility changes
         document.addEventListener('visibilitychange', () => {
@@ -277,10 +414,10 @@ class PACountdownTimer {
 
     checkMarketHours() {
         if (this.isMarketOpen()) {
-            document.getElementById('market-status').textContent = '市场开放';
+            document.getElementById('market-status').textContent = this.getText('marketOpen');
             this.startMainTimer();
         } else {
-            document.getElementById('market-status').textContent = '市场关闭';
+            document.getElementById('market-status').textContent = this.getText('marketClosed');
             if (this.marketModeOnly) {
                 this.stopMainTimer();
             } else {
@@ -370,12 +507,12 @@ class PACountdownTimer {
 
     testSound() {
         if (!this.audioInitialized) {
-            alert('音频尚未初始化，请点击页面任意位置后再试');
+            alert(this.getText('audioNotInitialized'));
             return;
         }
 
         if (!this.soundEnabled) {
-            alert('请先开启声音功能');
+            alert(this.getText('enableSoundFirst'));
             return;
         }
 
@@ -398,14 +535,14 @@ class PACountdownTimer {
         // Update sound button
         const soundBtn = document.getElementById('sound-toggle');
         if (this.audioInitialized) {
-            soundBtn.textContent = this.soundEnabled ? '🔊 声音开启' : '🔇 声音关闭';
+            soundBtn.textContent = this.soundEnabled ? this.getText('soundOn') : this.getText('soundOff');
         } else {
-            soundBtn.textContent = '⏳ 音频加载中...';
+            soundBtn.textContent = this.getText('audioLoading');
         }
 
         // Update market mode button
         const marketBtn = document.getElementById('market-toggle');
-        marketBtn.textContent = this.marketModeOnly ? '📈 仅交易时间' : '🌍 全天运行';
+        marketBtn.textContent = this.marketModeOnly ? this.getText('marketMode') : this.getText('allDayMode');
 
         // Update notification time display
         document.getElementById('notification-time').textContent = this.preNotificationSeconds;
